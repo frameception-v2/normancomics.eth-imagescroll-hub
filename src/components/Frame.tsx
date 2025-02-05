@@ -13,26 +13,56 @@ import {
   CardDescription,
   CardContent,
 } from "~/components/ui/card";
-
+import { PROJECT_TITLE, IMAGE_URLS } from "~/lib/constants";
 import { config } from "~/components/providers/WagmiProvider";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { base, optimism } from "wagmi/chains";
 import { useSession } from "next-auth/react";
 import { createStore } from "mipd";
 import { Label } from "~/components/ui/label";
-import { PROJECT_TITLE } from "~/lib/constants";
 
-function ExampleCard() {
+function ImageGallery() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? IMAGE_URLS.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === IMAGE_URLS.length - 1 ? 0 : prev + 1));
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Welcome to the Frame Template</CardTitle>
-        <CardDescription>
-          This is an example card that you can customize or remove
-        </CardDescription>
+        <CardTitle>Recent Image Gallery</CardTitle>
+        <CardDescription>Scroll through recent shared images</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Label>Place content in a Card here.</Label>
+      <CardContent className="flex flex-col items-center gap-4">
+        <div className="relative w-full aspect-square">
+          <img 
+            src={IMAGE_URLS[currentIndex]}
+            alt={`Gallery image ${currentIndex + 1}`}
+            className="w-full h-full object-cover rounded-lg"
+          />
+        </div>
+        <div className="flex gap-2 w-full justify-center">
+          <button
+            onClick={handlePrevious}
+            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+          >
+            Previous
+          </button>
+          <button
+            onClick={handleNext}
+            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+          >
+            Next
+          </button>
+        </div>
+        <Label className="text-sm text-gray-500">
+          Image {currentIndex + 1} of {IMAGE_URLS.length}
+        </Label>
       </CardContent>
     </Card>
   );
@@ -43,7 +73,6 @@ export default function Frame() {
   const [context, setContext] = useState<Context.FrameContext>();
 
   const [added, setAdded] = useState(false);
-
   const [addFrameResult, setAddFrameResult] = useState("");
 
   const addFrame = useCallback(async () => {
@@ -72,7 +101,6 @@ export default function Frame() {
       setContext(context);
       setAdded(context.client.added);
 
-      // If frame isn't already added, prompt user to add it
       if (!context.client.added) {
         addFrame();
       }
@@ -90,31 +118,14 @@ export default function Frame() {
         setAdded(false);
       });
 
-      sdk.on("notificationsEnabled", ({ notificationDetails }) => {
-        console.log("notificationsEnabled", notificationDetails);
-      });
-      sdk.on("notificationsDisabled", () => {
-        console.log("notificationsDisabled");
-      });
-
-      sdk.on("primaryButtonClicked", () => {
-        console.log("primaryButtonClicked");
-      });
-
-      console.log("Calling ready");
       sdk.actions.ready({});
 
-      // Set up a MIPD Store, and request Providers.
       const store = createStore();
-
-      // Subscribe to the MIPD Store.
       store.subscribe((providerDetails) => {
         console.log("PROVIDER DETAILS", providerDetails);
-        // => [EIP6963ProviderDetail, EIP6963ProviderDetail, ...]
       });
     };
     if (sdk && !isSDKLoaded) {
-      console.log("Calling load");
       setIsSDKLoaded(true);
       load();
       return () => {
@@ -140,7 +151,7 @@ export default function Frame() {
         <h1 className="text-2xl font-bold text-center mb-4 text-neutral-900">
           {PROJECT_TITLE}
         </h1>
-        <ExampleCard />
+        <ImageGallery />
       </div>
     </div>
   );
